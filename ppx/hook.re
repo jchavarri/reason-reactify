@@ -1,3 +1,4 @@
+/* Heavily inspired by https://github.com/zepalmer/ocaml-monadic */
 open Migrate_parsetree;
 open OCaml_406.Ast;
 open Ast_mapper;
@@ -58,7 +59,7 @@ let mapper =
               }
 
             | _ =>
-              /* Nothing left to do.  Just return the body. */
+              /* Nothing left to do. Just return the body. */
               mapper.expr(mapper, body)
             };
 

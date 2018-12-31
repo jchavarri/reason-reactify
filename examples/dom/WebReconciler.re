@@ -6,6 +6,10 @@
   * CLI apps, with a react-like functional API!
 */
 
+module Js = Js_of_ocaml.Js;
+module Dom_html = Js_of_ocaml.Dom_html;
+module Dom = Js_of_ocaml.Dom;
+
 exception InvalidNodePrimitiveMatchInUpdateInstance;
 
 let str = string_of_int;
