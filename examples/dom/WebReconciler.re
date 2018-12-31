@@ -152,14 +152,22 @@ let reducer = (state, action) =>
   | Decrement => state - 1
   };
 
-let renderCounter = () =>
+let renderCounter = () => {
+  let%hook dispatch = useReducer(reducer, 0);
+  <view>
+    <button title="Decrement" onPress={() => dispatch(Decrement)} />
+    <text> {"Counter: " ++ str(count)} </text>
+    <button title="Increment" onPress={() => dispatch(Increment)} />
+  </view>;
+};
+/* let renderCounter = () =>
   useReducer(reducer, 0, (count, dispatch) =>
     <view>
       <button title="Decrement" onPress={() => dispatch(Decrement)} />
       <text> {"Counter: " ++ str(count)} </text>
       <button title="Increment" onPress={() => dispatch(Increment)} />
     </view>
-  );
+  ); */
 
 module CounterButtons = (
   val createComponent((render, ~children, ()) =>
