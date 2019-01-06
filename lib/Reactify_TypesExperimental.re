@@ -37,14 +37,24 @@ module type React = {
 
   type elementWithChildren = (list(element), Effects.effects, Context.t)
   and render = unit => elementWithChildren
+  and renderXp = opaqueSlots => elementWithChildren
   and element =
     | Primitive(primitives, render)
     | Component(ComponentId.t, render)
     | Provider(render)
     | Empty(render)
+  and elementXp =
+    | PrimitiveXp(primitives, renderXp)
+    | ComponentXp(ComponentId.t, renderXp)
+    | ProviderXp(renderXp)
+    | EmptyXp(renderXp)
   and hook('t) =
     | Hook(element, 't)
-  and emptyHook = hook(unit);
+  and hookXp('t) =
+    | HookXp(elementXp, 't)
+  and emptyHook = hook(unit)
+  and emptyHookXp = hookXp(unit)
+  and opaqueSlots;
 
   type t;
 
@@ -74,7 +84,10 @@ module type React = {
   };
 
   let createComponent:
-    (((unit => hook('h), ~children: list(emptyHook)) => emptyHook) => 'c) =>
+    (
+      ((opaqueSlots => hook('h), ~children: list(emptyHook)) => emptyHook) =>
+      'c
+    ) =>
     (module Component with type createElement = 'c and type hooks = 'h);
   let component:
     (((unit => hook('h), ~children: list(emptyHook)) => emptyHook) => 'c) =>
@@ -91,7 +104,7 @@ module type React = {
   let getProvider: contextValue('t) => providerConstructor('t);
   let createContext: 't => contextValue('t);
   let useContext: contextValue('t) => 't;
-  let useContextExperimental:
+  let useContextXp:
     (contextValue('t), 't => hook('a)) => hook(('a, context('t)));
 
   let empty: emptyHook;
@@ -99,7 +112,7 @@ module type React = {
   let useEffect:
     (~condition: Effects.effectCondition=?, Effects.effectFunction) => unit;
 
-  let useEffectExperimental:
+  let useEffectXp:
     (
       ~condition: Effects.effectCondition=?,
       Effects.effectFunction,
@@ -109,14 +122,14 @@ module type React = {
 
   let useState: 'state => ('state, 'state => unit);
 
-  let useStateExperimental:
+  let useStateXp:
     ('state, (('state, 'state => unit)) => hook('a)) =>
     hook(('a, state('state)));
 
   let useReducer:
     (('state, 'action) => 'state, 'state) => ('state, 'action => unit);
 
-  let useReducerExperimental:
+  let useReducerXp:
     (
       ('state, 'action) => 'state,
       'state,
