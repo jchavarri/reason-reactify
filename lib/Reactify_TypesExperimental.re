@@ -30,31 +30,19 @@ module type Reconciler = {
 module type React = {
   type primitives;
   type node;
-  type state('s);
-  type reducer('r);
-  type effect;
-  type context('t);
 
   type elementWithChildren = (list(element), Effects.effects, Context.t)
   and render = unit => elementWithChildren
-  and renderXp = opaqueSlots => elementWithChildren
+  and opaqueComponent
   and element =
     | Primitive(primitives, render)
-    | Component(ComponentId.t, render)
+    | Component(ComponentId.t, opaqueComponent)
     | Provider(render)
     | Empty(render)
-  and elementXp =
-    | PrimitiveXp(primitives, renderXp)
-    | ComponentXp(ComponentId.t, renderXp)
-    | ProviderXp(renderXp)
-    | EmptyXp(renderXp)
   and hook('t) =
     | Hook(element, 't)
-  and hookXp('t) =
-    | HookXp(elementXp, 't)
-  and emptyHook = hook(unit)
-  and emptyHookXp = hookXp(unit)
-  and opaqueSlots;
+  and instance /* TODO: Remove */
+  and container; /* TODO: Remove */
 
   type t;
 
@@ -69,71 +57,86 @@ module type React = {
       node
     ) =>
     t;
-  let updateContainer: (t, emptyHook) => unit;
+  let updateContainer: (t, element) => unit;
 
   /*
        Component creation API
    */
   let primitiveComponent:
-    (~children: list(emptyHook), primitives) => emptyHook;
+    (~children: list(element), primitives) => element;
 
   module type Component = {
-    type hooks;
+    type slots;
     type createElement;
     let createElement: createElement;
   };
 
   let createComponent:
     (
-      ((opaqueSlots => hook('h), ~children: list(emptyHook)) => emptyHook) =>
+      (
+        (
+          (
+            (
+              Slots.t('s, _),
+              option(instance),
+              node,
+              element,
+              Context.t,
+              container,
+            )
+          ) =>
+          element,
+          ~children: list(element)
+        ) =>
+        element
+      ) =>
       'c
     ) =>
-    (module Component with type createElement = 'c and type hooks = 'h);
-  let component:
-    (((unit => hook('h), ~children: list(emptyHook)) => emptyHook) => 'c) =>
-    (module Component with type createElement = 'c and type hooks = 'h);
+    (module Component with type createElement = 'c and type slots = 's);
 
   /*
        Component API
    */
 
   type providerConstructor('t) =
-    (~children: list(emptyHook), ~value: 't, unit) => emptyHook;
+    (~children: list(element), ~value: 't, unit) => element;
   type contextValue('t);
 
   let getProvider: contextValue('t) => providerConstructor('t);
   let createContext: 't => contextValue('t);
   let useContext: contextValue('t) => 't;
-  let useContextXp:
-    (contextValue('t), 't => hook('a)) => hook(('a, context('t)));
 
-  let empty: emptyHook;
+  let empty: element;
 
   let useEffect:
     (~condition: Effects.effectCondition=?, Effects.effectFunction) => unit;
 
-  let useEffectXp:
+  let useState:
     (
-      ~condition: Effects.effectCondition=?,
-      Effects.effectFunction,
-      unit => hook('a)
+      'state,
+      (
+        Slots.t('state, Slots.t('slot, 'nextSlots)),
+        option(instance),
+        node,
+        element,
+        Context.t,
+        container,
+      )
     ) =>
-    hook(('a, effect));
-
-  let useState: 'state => ('state, 'state => unit);
-
-  let useStateXp:
-    ('state, (('state, 'state => unit)) => hook('a)) =>
-    hook(('a, state('state)));
+    (('state, 'state => unit), Slots.t('slot, 'nextSlots));
 
   let useReducer:
-    (('state, 'action) => 'state, 'state) => ('state, 'action => unit);
-
-  let useReducerXp:
     (
       ('state, 'action) => 'state,
       'state,
-      (('state, 'action => unit)) => hook('a)
+      (
+        Slots.t('state, Slots.t('slot, 'nextSlots)),
+        option(instance),
+        node,
+        element,
+        Context.t,
+        container,
+      )
     ) =>
-    hook(('a, reducer(('state, 'action) => 'state)));
+    (('state, 'action => unit), Slots.t('slot, 'nextSlots));
 };

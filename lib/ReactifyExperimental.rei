@@ -7,7 +7,7 @@ module Make:
       type node = ReconcilerImpl.node and
       type primitives = ReconcilerImpl.primitives;
 
-module State = DeprecatedState;
+module State = State;
 module Event = Event;
 module Utility = Utility;
 module Object = Object;
